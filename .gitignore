@@ -19,6 +19,8 @@ lerna-debug.log*
 /.nyc_output
 
 .env
+*.txt
+
 # IDEs and editors
 /.idea
 .project
