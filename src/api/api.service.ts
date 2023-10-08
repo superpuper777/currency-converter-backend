@@ -14,12 +14,11 @@ export class ApiService {
   ) {}
   apiKey = this.configService.get<string>('API_KEY');
   baseUrl = this.configService.get<string>('BASE_URL');
-  baseCurrency = this.configService.get<string>('BASE_CURRENCY');
 
   async fetchCurrencies(): Promise<ResponseDataType> {
     const response = await lastValueFrom(
       this.httpService.get<AxiosResponse<ResponseType>>(
-        `${this.baseUrl}latest?apikey=${this.apiKey}&currencies=USD,EUR,RUB,BYN`,
+        `${this.baseUrl}latest?apikey=${this.apiKey}&currencies=EUR,RUB,BYN,USD`,
       ),
     ).catch((err) => {
       console.log(err);
@@ -28,7 +27,15 @@ export class ApiService {
     const parsedResponse = plainToInstance(ResponseType, response, {
       enableCircularCheck: true,
     });
-
-    return parsedResponse.data;
+    return this.formattedData(parsedResponse.data);
   }
+
+  private formattedData = (obj: any) => {
+    const array = [];
+    const { data } = obj;
+    for (const key in data) {
+      array.push(data[key]);
+    }
+    return { currency: array };
+  };
 }

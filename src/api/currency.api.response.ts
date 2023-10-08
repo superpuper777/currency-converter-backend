@@ -1,15 +1,11 @@
 export class ResponseType {
   data: ResponseDataType;
 }
-export enum EnumCurrency {
-  BYN = 'BYN',
-  UDS = 'USD',
-  RUB = 'RUB',
-  EUR = 'EUR',
-}
 
-export class ResponseDataType {
-  EnumCurrency: Record<string, number>;
+type CurrencyType = {
   code: string;
   value: number;
+};
+export class ResponseDataType {
+  currency: Array<CurrencyType>;
 }

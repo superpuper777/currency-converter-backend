@@ -9,7 +9,7 @@ export class AppController {
     private readonly apiService: ApiService,
   ) {}
 
-  @Get()
+  @Get('/currencies')
   getCurrencies(): Promise<ResponseDataType> {
     return this.apiService.fetchCurrencies();
   }
