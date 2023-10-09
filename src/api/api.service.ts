@@ -1,11 +1,22 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
-import { AxiosResponse } from 'axios';
+// import { AxiosResponse } from 'axios';
 import { lastValueFrom } from 'rxjs';
-import { ResponseType, ResponseDataType } from './currency.api.response';
-import { plainToInstance } from 'class-transformer';
 
+import {
+  CurrenciesResponse,
+  ExchangeRatesResponse,
+} from './currency.api.response';
+
+import * as qs from 'qs';
+
+const BASE_CURRENCIES = ['EUR', 'RUB', 'USD', 'BYN'];
+
+interface FetchExchangeRatesOptions {
+  currencies: string[];
+  baseCurrency: string;
+}
 @Injectable()
 export class ApiService {
   constructor(
@@ -15,27 +26,49 @@ export class ApiService {
   apiKey = this.configService.get<string>('API_KEY');
   baseUrl = this.configService.get<string>('BASE_URL');
 
-  async fetchCurrencies(): Promise<ResponseDataType> {
+  async fetchExchangeRates(
+    options: FetchExchangeRatesOptions,
+  ): Promise<ExchangeRatesResponse> {
+    const currencies = BASE_CURRENCIES.concat(options.currencies);
+
     const response = await lastValueFrom(
-      this.httpService.get<AxiosResponse<ResponseType>>(
-        `${this.baseUrl}latest?apikey=${this.apiKey}&currencies=EUR,RUB,BYN,USD`,
-      ),
+      this.httpService.get<ExchangeRatesResponse>(`${this.baseUrl}latest`, {
+        params: {
+          apikey: this.apiKey,
+          currencies: currencies,
+          base_currency: options.baseCurrency,
+        },
+        paramsSerializer: {
+          serialize: (params: Record<string, any>) =>
+            qs.stringify(params, { arrayFormat: 'comma' }),
+        },
+      }),
     ).catch((err) => {
       console.log(err);
     });
 
-    const parsedResponse = plainToInstance(ResponseType, response, {
-      enableCircularCheck: true,
-    });
-    return this.formattedData(parsedResponse.data);
+    if (!response) {
+      throw new BadRequestException('Something bad happened');
+    }
+
+    return response.data;
   }
 
-  private formattedData = (obj: any) => {
-    const array = [];
-    const { data } = obj;
-    for (const key in data) {
-      array.push(data[key]);
+  async fetchCurrencies(): Promise<CurrenciesResponse> {
+    const response = await lastValueFrom(
+      this.httpService.get<CurrenciesResponse>(`${this.baseUrl}currencies`, {
+        params: {
+          apikey: this.apiKey,
+        },
+      }),
+    ).catch((err) => {
+      console.log(err);
+    });
+
+    if (!response) {
+      throw new BadRequestException('Something bad happened');
     }
-    return { currency: array };
-  };
+
+    return response.data;
+  }
 }
