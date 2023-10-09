@@ -29,7 +29,7 @@ export class AppController {
     return Object.entries(exchangeRates.data).reduce((acc, [, data]) => {
       const newData = {
         code: data.code,
-        value: data.value * Number.parseInt(value, 10),
+        value: +(data.value * Number.parseFloat(value)).toFixed(4),
       };
 
       acc.push(newData);
