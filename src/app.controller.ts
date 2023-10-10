@@ -1,6 +1,5 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { ApiService } from './api/api.service';
-// import { ResponseDataType } from './api/currency.api.response';
 
 @Controller()
 export class AppController {
@@ -25,7 +24,6 @@ export class AppController {
       currencies: currencies ? currencies.split(',') : [],
       baseCurrency,
     });
-
     return Object.entries(exchangeRates.data).reduce((acc, [, data]) => {
       const newData = {
         code: data.code,
@@ -36,6 +34,7 @@ export class AppController {
 
       return acc;
     }, []);
+
     // let lastExchangeRates = await databaseService.getExchangeRates();
 
     // const twoHoursAge = new Date() - '2 hours';

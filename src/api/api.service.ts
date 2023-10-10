@@ -1,8 +1,10 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
-// import { AxiosResponse } from 'axios';
 import { lastValueFrom } from 'rxjs';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 import {
   CurrenciesResponse,
@@ -17,6 +19,7 @@ interface FetchExchangeRatesOptions {
   currencies: string[];
   baseCurrency: string;
 }
+
 @Injectable()
 export class ApiService {
   constructor(
@@ -50,8 +53,28 @@ export class ApiService {
     if (!response) {
       throw new BadRequestException('Something bad happened');
     }
-
+    await this.createMany(response.data);
     return response.data;
+  }
+
+  async createMany(data) {
+    await prisma.currency.createMany({
+      data: this.formatter(data.data),
+      skipDuplicates: true,
+    });
+  }
+
+  private formatter(data: ExchangeRatesResponse) {
+    return Object.entries(data).reduce((acc, [, data]) => {
+      const newData = {
+        code: data.code,
+        value: data.value,
+      };
+
+      acc.push(newData);
+
+      return acc;
+    }, []);
   }
 
   async fetchCurrencies(): Promise<CurrenciesResponse> {
